@@ -14,9 +14,12 @@ module openconfig-system {
   import openconfig-extensions { prefix oc-ext; }
   import openconfig-aaa { prefix oc-aaa; }
   import openconfig-system-logging { prefix oc-log; }
+  import openconfig-system-management { prefix oc-sys-mgmt; }
   import openconfig-system-terminal { prefix oc-sys-term; }
   import openconfig-procmon { prefix oc-proc; }
   import openconfig-alarms { prefix oc-alarms; }
+  import openconfig-messages { prefix oc-messages; }
+  import openconfig-license { prefix oc-license; }
 
   // meta
   organization "OpenConfig working group";
@@ -43,7 +46,44 @@ module openconfig-system {
     Section 4.c of the IETF Trust's Legal Provisions Relating
     to IETF Documents (http://trustee.ietf.org/license-info).";
 
-  oc-ext:openconfig-version "0.5.0";
+  oc-ext:openconfig-version "0.9.1";
+
+  revision "2020-03-25" {
+    description
+      "Fix typo in description statement for ipv4-address
+      list.";
+    reference "0.9.1";
+  }
+
+  revision "2020-01-07" {
+    description
+      "Add import of license management model.";
+    reference "0.9.0";
+  }
+
+  revision "2019-03-15" {
+    description
+      "Update boot time to be nanoseconds since epoch.";
+    reference "0.8.0";
+  }
+
+  revision "2019-01-29" {
+    description
+      "Add messages module to the system model";
+    reference "0.7.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.6.1";
+  }
+
+  revision "2018-07-17" {
+    description
+      "Add gRPC server data";
+    reference "0.6.0";
+  }
 
   revision "2018-01-21" {
     description
@@ -75,6 +115,11 @@ module openconfig-system {
       "Initial public release";
     reference "0.1.0";
   }
+
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
 
   // extension statements
 
@@ -204,9 +249,10 @@ module openconfig-system {
 
     leaf boot-time {
         type oc-types:timeticks64;
+        units "nanoseconds";
         description
           "This timestamp indicates the time that the system was last
-          restarted.  The value is the timestamp in seconds relative
+          restarted.  The value is the timestamp in nanoseconds relative
           to the Unix Epoch (Jan 1, 1970 00:00:00 UTC).";
     }
 
@@ -277,7 +323,7 @@ module openconfig-system {
     leaf-list ipv4-address {
       type oc-inet:ipv4-address;
       description
-        "List of IPv4 addressses for the host entry";
+        "List of IPv4 addresses for the host entry";
     }
 
     leaf-list ipv6-address {
@@ -952,6 +998,7 @@ module openconfig-system {
       uses system-clock-top;
       uses system-dns-top;
       uses system-ntp-top;
+      uses oc-sys-mgmt:system-grpc-server-top;
       uses oc-sys-term:system-ssh-server-top;
       uses oc-sys-term:system-telnet-server-top;
       uses oc-log:logging-top;
@@ -960,6 +1007,8 @@ module openconfig-system {
       uses system-cpu-top;
       uses oc-proc:procmon-processes-top;
       uses oc-alarms:alarms-top;
+      uses oc-messages:messages-top;
+      uses oc-license:license-top;
     }
   }
 

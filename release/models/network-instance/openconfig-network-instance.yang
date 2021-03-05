@@ -8,7 +8,6 @@ module openconfig-network-instance {
   prefix "oc-netinst";
 
   // import some basic types
-  //import ietf-inet-types { prefix inet; }
   import ietf-yang-types { prefix "yang"; }
   import ietf-inet-types { prefix "inet"; }
   import openconfig-network-instance-types { prefix "oc-ni-types"; }
@@ -47,7 +46,57 @@ module openconfig-network-instance {
     virtual switch instance (VSI). Mixed Layer 2 and Layer 3
     instances are also supported.";
 
-  oc-ext:openconfig-version "0.10.2";
+  oc-ext:openconfig-version "0.14.0";
+
+  revision "2020-06-20" {
+    description
+      "Add support for toggling metric propagation
+      when using table-connections.";
+    reference "0.14.0";
+  }
+
+  revision "2019-11-28" {
+    description
+      "Revert fixes for paths in when statements";
+    reference "0.13.2";
+  }
+
+  revision "2019-06-11" {
+    description
+      "Fixed paths in when statements";
+    reference "0.13.1";
+  }
+
+  revision "2019-05-14" {
+    description
+      "Added support for BGP signalled VPWS and VPLS.";
+    reference "0.13.0";
+  }
+
+  revision "2019-04-16" {
+    description
+      "Move BGP RIB into the protocol/bgp container.";
+    reference "0.12.0";
+  }
+
+  revision "2019-02-03" {
+    description
+      "Extend netinst type description to link it to, for example, MPLS
+      service types.";
+    reference "0.11.2";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.11.1";
+  }
+
+  revision "2018-08-11" {
+    description
+      "Add vlan id as additional key in MAC table";
+    reference "0.11.0";
+  }
 
   revision "2018-06-22" {
     description
@@ -145,6 +194,11 @@ module openconfig-network-instance {
     reference "0.1.0";
   }
 
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
+
   typedef network-instance-ref {
     type leafref {
       path "/network-instances/network-instance/config/name";
@@ -178,8 +232,8 @@ module openconfig-network-instance {
         }
 
         uses l2ni-instance {
-            when "config/type = 'L2VSI' or config/type = 'L2P2P'" +
-                 " or config/type = 'L2L3' or config/type = 'DEFAULT_INSTANCE'" {
+            when "./config/type = 'L2VSI' or ./config/type = 'L2P2P'" +
+                 " or ./config/type = 'L2L3' or ./config/type = 'DEFAULT_INSTANCE'" {
                     description
                       "Layer 2 configuration parameters included when
                       a network instance is a Layer 2 instance or a
@@ -359,6 +413,14 @@ module openconfig-network-instance {
               uses instance-interfaces-config;
               uses instance-interfaces-state;
             }
+          }
+        }
+
+        uses oc-ni-l3:l3ni-route-limit-structural {
+          when "./config/type = 'L3VRF' or ./config/type = 'L2L3'" {
+            description
+              "Layer 3 VRF or L2/L3 instances can have route limits
+              applied. This is not supported for the default instance.";
           }
         }
 
@@ -573,7 +635,7 @@ module openconfig-network-instance {
         }
 
         uses oc-mpls:mpls-top {
-          when "config/type = 'DEFAULT_INSTANCE'" {
+          when "./config/type = 'DEFAULT_INSTANCE'" {
             description
               "MPLS configuration is only valid within the default
               network instance.";
@@ -581,7 +643,7 @@ module openconfig-network-instance {
         }
 
         uses oc-sr:sr-top {
-          when "config/type = 'DEFAULT_INSTANCE'" {
+          when "./config/type = 'DEFAULT_INSTANCE'" {
             description
               "Segment routing configuration is only valid with the default
               network instance.";
@@ -645,7 +707,7 @@ module openconfig-network-instance {
             }
 
             uses oc-loc-rt:local-static-top {
-              when "config/identifier = 'STATIC'" {
+              when "./config/identifier = 'STATIC'" {
                 description
                   "Include static route parameters only when the
                   protocol is set to static";
@@ -656,7 +718,7 @@ module openconfig-network-instance {
             }
 
             uses oc-loc-rt:local-aggregate-top {
-              when "config/identifier = 'LOCAL_AGGREGATE'" {
+              when "./config/identifier = 'LOCAL_AGGREGATE'" {
                 description
                   "Include aggregate route parameters only when the
                   protocol is set to aggregate";
@@ -667,7 +729,7 @@ module openconfig-network-instance {
             }
 
             uses oc-bgp:bgp-top {
-              when "config/identifier = 'BGP'" {
+              when "./config/identifier = 'BGP'" {
                 description
                   "Include BGP parameters only when the protocol
                   is of type BGP";
@@ -678,7 +740,7 @@ module openconfig-network-instance {
             }
 
             uses oc-ospfv2:ospfv2-top {
-              when "config/identifier = 'OSPF'" {
+              when "./config/identifier = 'OSPF'" {
                 description
                   "Include OSPFv2 parameters only when the protocol
                   is of type OSPFv2";
@@ -686,7 +748,7 @@ module openconfig-network-instance {
             }
 
             uses oc-isis:isis-top {
-              when "config/identifier = 'ISIS'" {
+              when "./config/identifier = 'ISIS'" {
                 description
                   "Include IS-IS configuration when the protocol is of type
                   IS-IS";
@@ -697,7 +759,7 @@ module openconfig-network-instance {
             }
 
             uses oc-pim:pim-top {
-              when "config/identifier = 'PIM'" {
+              when "./config/identifier = 'PIM'" {
                 description
                   "Include PIM configuration when the protocol is of type
                   PIM";
@@ -708,7 +770,7 @@ module openconfig-network-instance {
             }
 
             uses oc-igmp:igmp-top {
-              when "config/identifier = 'IGMP'" {
+              when "./config/identifier = 'IGMP'" {
                 description
                   "Include IGMP configuration when the protocol is of type
                   IGMP";
@@ -728,7 +790,7 @@ module openconfig-network-instance {
       "Type dependent network instance configuration";
 
     uses oc-ni-l3:l3ni-instance-common-config {
-      when "type = 'L3VRF' or type = 'L2L3'" {
+      when "./type = 'L3VRF' or ./type = 'L2L3'" {
         description
           "Layer 3 VRF configuration parameters included when a
           network instance is a L3VRF or combined L2L3 instance";
@@ -736,12 +798,12 @@ module openconfig-network-instance {
     }
 
     uses l2ni-instance-common-config {
-      when "type = 'L2VSI' or type = 'L2P2P'" +
-           " or type = 'L2L3'" {
-              description
-                "Layer 2 configuration parameters included when
-                a network instance is a Layer 2 instance or a
-                combined L2L3 instance";
+      when "./type = 'L2VSI' or ./type = 'L2P2P'" +
+           " or ./type = 'L2L3'" {
+            description
+              "Layer 2 configuration parameters included when
+              a network instance is a Layer 2 instance or a
+              combined L2L3 instance";
       }
     }
   }
@@ -782,6 +844,31 @@ module openconfig-network-instance {
       to the current system";
 
       uses oc-if:interface-ref-common;
+
+    leaf site-id {
+      type uint16;
+      description
+        "The VE ID as defined in RFC4761 (VPLS) or CE ID as defined in
+        RFC6624 (l2vpn) to uniquely identify this endpoint (site) as part
+        of the BGP discovery of remote endpoints for layer 2 services.";
+      reference "RFC6624 Section 2.2.1, RFC4761 Section 3.2.2";
+    }
+
+    // TODO not seen this in configuration yet; is it managed by the
+    // PE router code?
+    leaf site-label-block-offset {
+      type uint16;
+      description
+        "The VPLS label block offset that is signaled with the 'site-id'.";
+      reference "RFC4761 Section 3.2.1 'VBO'";
+    }
+
+    leaf site-label-block-size {
+      type uint16;
+      description
+        "The VPLS label block size that is signaled with the 'site-id'.";
+      reference "RFC4761 Section 3.2.1 'VBS'";
+    }
   }
 
   grouping instance-endpoint-remote-config {
@@ -800,6 +887,14 @@ module openconfig-network-instance {
       description
         "The virtual-circuit identifier that identifies the
         connection at the remote end-point";
+    }
+
+    leaf site-id {
+      type uint16;
+      description
+        "Identifies remote sites. When BGP discovery is used this
+        is the customer edge identifier";
+      reference "RFC6624 Section 2.2.1";
     }
   }
 
@@ -927,6 +1022,20 @@ module openconfig-network-instance {
         "The destination protocol for the table connection";
     }
 
+    leaf disable-metric-propagation {
+      type boolean;
+      default false;
+      description
+        "By default a system may reflect the metric specified in
+        the destination protocol according to that which is set in
+        the source protocol. For example:
+         - IS-IS metric may be reflected in BGP MED (and vice versa)
+         - OSPF metric may be reflected in the BGP MED (and vice versa)
+        When this leaf is set to true, this reflection behaviour MUST be
+        disabled, and rather the metric must be set to the default value,
+        or explicitly set by policy.";
+    }
+
     uses oc-rpol:apply-policy-import-config;
   }
 
@@ -949,7 +1058,12 @@ module openconfig-network-instance {
       description
         "The type of network instance. The value of this leaf
         indicates the type of forwarding entries that should be
-        supported by this network instance";
+        supported by this network instance. Signalling protocols
+        also use the network instance type to infer the type of
+        service they advertise; for example MPLS signalling
+        for an L2VSI network instance would infer a VPLS service
+        whereas a type of L2PTP would infer a VPWS (pseudo-wire)
+        service";
     }
 
     leaf enabled {

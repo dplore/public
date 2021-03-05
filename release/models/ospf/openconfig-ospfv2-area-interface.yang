@@ -24,7 +24,31 @@ submodule openconfig-ospfv2-area-interface {
     "This submodule provides OSPFv2 configuration and operational
     state parameters that are specific to the area context";
 
-  oc-ext:openconfig-version "0.1.2";
+  oc-ext:openconfig-version "0.2.2";
+
+  revision "2019-11-28" {
+    description
+      "Revert path changes in when statements in LSDB model";
+    reference "0.2.2";
+  }
+
+  revision "2019-11-05" {
+    description
+      "Fix paths in when statements in LSDB model";
+    reference "0.2.1";
+  }
+
+  revision "2019-07-09" {
+    description
+      "Normalise all timeticks64 to be expressed in nanoseconds.";
+    reference "0.2.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.1.3";
+  }
 
   revision "2018-06-05" {
     description
@@ -199,15 +223,11 @@ submodule openconfig-ospfv2-area-interface {
     }
 
     leaf dead-time {
-      // rjs TODO: discussion with aashaikh@ + hines@ around how this
-      // value should be represented, usually is a timer that
-      // continually counts down but this sounds challenging for
-      // telemetry.
       type oc-types:timeticks64;
       description
         "The time at which this neighbor's adjacency will be
-        considered dead. This value is expressed as a number of
-        seconds since the Unix Epoch";
+        considered dead. The value is expressed relative to
+        the Unix Epoch (Jan 1, 1970 00:00:00 UTC).";
     }
 
     leaf designated-router {
@@ -234,16 +254,14 @@ submodule openconfig-ospfv2-area-interface {
 
     leaf last-established-time {
       type oc-types:timeticks64;
-      units seconds;
       // rjs TODO: check implementations - is FULL considered 'up'
       // since the adjacency is probably up since ExStart
       description
         "The time at which the adjacency was last established with
         the neighbor. That is to say the time at which the
-        adjacency last transitioned into the FULL state.
-
-        This value is expressed as the number of seconds, relative to
-        the Unix Epoch (Jan 1, 1970 00:00:00 UTC).";
+        adjacency last transitioned into the FULL state. The
+        value is expressed relative to the Unix Epoch (Jan 1 1970
+        00:00:00 UTC).";
     }
 
     leaf adjacency-state {

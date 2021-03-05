@@ -21,7 +21,19 @@ module openconfig-types {
     are used across OpenConfig models. It can be imported by modules
     that make use of these types.";
 
-  oc-ext:openconfig-version "0.5.0";
+  oc-ext:openconfig-version "0.6.0";
+
+  revision "2019-04-16" {
+    description
+      "Clarify definition of timeticks64.";
+    reference "0.6.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.5.1";
+  }
 
   revision "2018-05-05" {
     description
@@ -66,6 +78,11 @@ module openconfig-types {
     reference "0.2.0";
   }
 
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
+
   typedef percentage {
     type uint8 {
       range "0..100";
@@ -86,12 +103,11 @@ module openconfig-types {
 
   typedef timeticks64 {
     type uint64;
+    units "nanoseconds";
     description
-     "This type is based on the timeticks type defined in
-     RFC 6991, but with 64-bit width.  It represents the time,
-     modulo 2^64, in hundredths of a second between two epochs.";
-    reference
-      "RFC 6991 - Common YANG Data Types";
+     "The timeticks64 represents the time, modulo 2^64 in
+     nanoseconds between two epochs. The leaf using this
+     type must define the epochs that tests are relative to.";
   }
 
   typedef ieeefloat32 {

@@ -63,7 +63,31 @@ module openconfig-platform {
     (presence or absence of a component) and state (physical
     attributes or status).";
 
-  oc-ext:openconfig-version "0.11.0";
+  oc-ext:openconfig-version "0.13.0";
+
+  revision "2021-01-18" {
+    description
+      "Add container for software module component";
+    reference "0.13.0";
+  }
+
+  revision "2019-04-16" {
+    description
+      "Fix bug in parent path reference";
+    reference "0.12.2";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.12.1";
+  }
+
+  revision "2018-06-29" {
+    description
+      "Added location description for components";
+    reference "0.12.0";
+  }
 
   revision "2018-06-03" {
     description
@@ -112,6 +136,11 @@ module openconfig-platform {
       "Added temperature state variable to component";
     reference "0.5.0";
   }
+
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
 
   // grouping statements
 
@@ -296,6 +325,16 @@ module openconfig-platform {
         component";
     }
 
+    leaf location {
+      type string;
+      description
+        "System-supplied description of the location of the
+        component within the system. This could be a bay position,
+        slot number, socket location, etc. For component types that
+        have an explicit slot-id attribute, such as linecards, the
+        system should populate the more specific slot-id.";
+    }
+
     leaf description {
       type string;
       description
@@ -383,7 +422,7 @@ module openconfig-platform {
 
     leaf parent {
       type leafref {
-        path "../../config/name";
+        path "../../../component/config/name";
       }
       description
         "Reference to the name of the parent component.  Note that
@@ -681,6 +720,23 @@ module openconfig-platform {
         config false;
         description
           "Operational state data for backplane components";
+      }
+    }
+
+    container software-module {
+      description
+        "Data for software module components, i.e., for components
+        with type=SOFTWARE_MODULE";
+
+      container config {
+        description
+          "Configuration data for software module components";
+      }
+
+      container state {
+        config false;
+        description
+          "Operational state data for software module components";
       }
     }
   }

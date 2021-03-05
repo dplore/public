@@ -12,8 +12,10 @@ module openconfig-terminal-device {
   import openconfig-if-ethernet { prefix oc-eth; }
   import openconfig-platform { prefix oc-platform; }
   import openconfig-platform-transceiver { prefix oc-transceiver; }
+  import openconfig-lldp { prefix oc-lldp; }
   import openconfig-extensions { prefix oc-ext; }
   import ietf-yang-types { prefix yang; }
+  import openconfig-yang-types { prefix oc-yang; }
 
 
   // meta
@@ -74,7 +76,81 @@ module openconfig-terminal-device {
     ports per linecard, separate linecards for client and line ports,
     etc.).";
 
-  oc-ext:openconfig-version "1.0.0";
+  oc-ext:openconfig-version "1.7.3";
+
+  revision "2020-05-09" {
+    description
+      "Remove references from read-write contexts to read-only
+      contexts in when statements.";
+    reference "1.7.3";
+  }
+
+  revision "2019-11-28" {
+    description
+      "Additional xpath fixes in when statement";
+    reference "1.7.2";
+  }
+
+  revision "2019-10-12" {
+    description
+      "Fix when statement paths";
+    reference "1.7.1";
+  }
+
+  revision "2019-08-08" {
+    description
+      "Add ALS config to logical-channel/ethernet/config and remove
+       legacy interfaces augment for this config. Client FEC was
+       previosuly migrated to the components model and should not
+       be here anymore.";
+    reference "1.7.0";
+  }
+
+  revision "2019-07-26" {
+    description
+      "Add support for LLDP natively on logical-channels.";
+    reference "1.6.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "1.5.1";
+  }
+
+  revision "2018-10-23" {
+    description
+      "Adds support of logical-channel tributary slot allocation to
+       logical-channel-assignments with different channel speeds.
+       Enables logical channel mapping procedure specification.";
+    reference "1.5.0";
+  }
+
+  revision "2018-08-28" {
+    description
+      "Adds terminal device related Ethernet counters";
+    reference "1.4.0";
+  }
+
+  revision "2018-07-30" {
+    description
+      "Adds lldp snooping config leaf and augmented it to oc-lldp";
+    reference "1.3.0";
+  }
+
+  revision "2018-07-26" {
+    description
+      "Adds OTN protocol counter stats of errored-blocks and
+       fec-uncorrectable-blocks, adds ethernet-config-ext grouping
+       and uses it to augment oc-eth";
+    reference "1.2.0";
+  }
+
+  revision "2018-07-17" {
+    description
+      "Adds testing enum to link-state";
+    reference "1.1.0";
+  }
 
   revision "2017-07-08" {
     description
@@ -88,6 +164,10 @@ module openconfig-terminal-device {
     reference "0.4.0";
   }
 
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
 
   grouping terminal-input-optical-power {
     description
@@ -110,7 +190,44 @@ module openconfig-terminal-device {
       "Configuration data for logical channels with Ethernet
       framing";
 
-    //TODO:currently a empty container
+    leaf client-als {
+      type enumeration {
+        enum NONE {
+          description
+            "The client port will do nothing when a failure is
+            detected on the line port or the remote client port";
+        }
+        enum LASER_SHUTDOWN {
+          description
+            "The client port will shut down the laser to notify the
+            subtending Ethernet equipment of the failure detected on
+            the line port or the remote client port.";
+        }
+        enum ETHERNET {
+          description
+            "The client port will propagate the local fault or remote
+            fault signal to the subtending Ethernet equipment.";
+        }
+      }
+      default ETHERNET;
+      description
+        "Sets the client port behavior that defines if the actions
+        of automatic laser shutdown (als), ethernet fault
+        propagation, or nothing will be done upon the detection
+        of a failure on the line port or the upstream remote
+        client port.";
+    }
+
+    leaf als-delay {
+      type uint32;
+      units milliseconds;
+      default 0;
+      description
+        "The timer to delay the client-als actions on the client
+        port when a local or remote fault is detected on the line
+        port. The delay will only be valid when the client-als is
+        set to LASER_SHUTDOWN";
+    }
   }
 
   grouping terminal-ethernet-protocol-state {
@@ -119,6 +236,76 @@ module openconfig-terminal-device {
       is using Ethernet protocol framing, e.g., 10GE, 100GE";
 
       uses oc-eth:ethernet-interface-state-counters;
+      uses terminal-ethernet-protocol-state-counters;
+  }
+
+  grouping terminal-ethernet-protocol-state-counters {
+    description
+      "Ethernet-specific counters for terminal devices when
+      logical channel is using Ethernet protocol framing,
+      e.g., 10GE, 100GE";
+
+    // ingress counters
+
+    leaf in-pcs-bip-errors {
+      type oc-yang:counter64;
+      description
+        "The number of received bit interleaved parity (BIP) errors
+        at the physical coding sublayer (PCS). If the interface
+        consists of multiple lanes, this will be the sum of all
+	errors on the lane";
+    }
+
+    leaf in-pcs-errored-seconds {
+      type oc-yang:counter64;
+      description
+        "The number of seconds that physical coding sublayer (PCS)
+        errors have crossed a sytem defined threshold indicating the
+        link is erroring";
+    }
+
+    leaf in-pcs-severely-errored-seconds {
+      type oc-yang:counter64;
+      description
+        "The number of seconds that physical coding sublayer (PCS)
+        errors have crossed a system defined threshold indicating the
+        link is severely erroring";
+    }
+
+    leaf in-pcs-unavailable-seconds {
+      type oc-yang:counter64;
+      description
+        "The number of seconds that physical coding sublayer (PCS)
+        errors have crossed a system defined threshold indicating the
+        link is unavailable";
+    }
+
+    // egress counters
+
+    leaf out-pcs-bip-errors {
+      type oc-yang:counter64;
+      description
+        "The number of transmitted bit interleaved parity (BIP) errors
+        at the physical coding sublayer (PCS). If the interface
+        consists of multiple lanes, this will be the sum of all
+        errors on the lane";
+    }
+
+    leaf out-crc-errors {
+      type oc-yang:counter64;
+      description
+        "Number of FCS/CRC error check failures sent on the interface";
+    }
+
+    leaf out-block-errors {
+      type oc-yang:counter64;
+      description
+        "The number of transmitted errored blocks. Error detection
+        codes are capable of detecting whether one or more errors have
+        occurred in a given sequence of bits – the block. It is
+        normally not possible to determine the exact number of errored
+        bits within the block";
+    }
   }
 
   grouping terminal-ethernet-protocol-top {
@@ -145,9 +332,127 @@ module openconfig-terminal-device {
           "Operational state data for Ethernet protocol framing
           on logical channels";
 
+        uses terminal-ethernet-protocol-config;
         uses terminal-ethernet-protocol-state;
       }
+
+      uses lldp-logical-channel-top;
     }
+  }
+
+  grouping lldp-logical-channel-top {
+    description
+      "Top-level grouping for LLDP data for a logical channel";
+
+    container lldp {
+      description
+        "LLDP data for logical channels";
+
+      container config {
+        description
+          "LLDP configuration data for logical channels";
+
+        uses lldp-logical-channel-config;
+      }
+
+      container state {
+        config false;
+        description
+          "LLDP operational state data for logical channels";
+
+        uses lldp-logical-channel-config;
+        uses oc-lldp:lldp-interface-state;
+      }
+
+      uses lldp-logical-channel-neighbor-top;
+    }
+  }
+
+  grouping lldp-logical-channel-config {
+    description
+      "Configuration data for LLDP for logical-channels";
+
+    leaf enabled {
+      type boolean;
+      default "false";
+      description
+        "Enable or disable the LLDP protocol on the logical channel.";
+    }
+
+    leaf snooping {
+      type boolean;
+      default "false";
+      description
+        "If true, LLDP PDUs are only received and processed on
+        the logical-channel, but are not originated by the local
+        agent. The PDUs are not dropped by the logical channel after
+        processing, but relayed to the downstream link layer
+        neighbors. The snooping mode is valid only when LLDP is
+        enabled on the logical channel. The snooping mode is useful
+        when a logical channel does not want its link layer neighbors
+        to discover itself since, for example, it is a lower-layer
+        logical channel.";
+    }
+  }
+
+  grouping lldp-logical-channel-neighbor-top {
+    description
+      "Top-level grouping for the LLDP neighbor list";
+
+    container neighbors {
+      config false;
+      description
+        "Enclosing container for list of LLDP neighbors on
+        a logical channel";
+
+      list neighbor {
+        key "id";
+        description
+          "List of LLDP neighbors. If the implementation only
+          supports one neighbor, this would always be a list with
+          one item. If the device and neighbor supported multiple
+          neighbors, which can be achieved via LLDP forwarding, then
+          this would be supported";
+        reference
+          "IEEE Std 802.1AB-2016, section 7.1, Destination address";
+
+        leaf id {
+          type leafref {
+            path "../state/id";
+          }
+          description
+            "System generated identifier for the neighbor on
+            the logical channel.";
+        }
+
+        container config {
+          description
+            "Configuration data ";
+
+          uses lldp-logical-channel-neighbor-config;
+        }
+
+        container state {
+
+          config false;
+
+          description
+            "Operational state data ";
+
+          uses oc-lldp:lldp-system-info-config;
+          uses oc-lldp:lldp-system-info-state;
+          uses oc-lldp:lldp-neighbor-config;
+          uses oc-lldp:lldp-neighbor-state;
+        }
+
+        uses oc-lldp:lldp-custom-tlv-top;
+      }
+    }
+  }
+
+  grouping lldp-logical-channel-neighbor-config {
+    description
+      "Configuration data for LLDP neighbors";
   }
 
   grouping terminal-otn-protocol-config {
@@ -173,6 +478,17 @@ module openconfig-terminal-device {
         "Trail trace identifier (TTI) transmit message automatically
         created.  If true, then setting a custom transmit message
         would be invalid.";
+    }
+
+    leaf tributary-slot-granularity {
+      type identityref {
+        base oc-opt-types:TRIBUTARY_SLOT_GRANULARITY;
+      }
+      description
+        "Granularity value of OPUk or OPUCn tributary slots for OTN
+        signal allocation. The currently defined values follow the
+        existing ITU-T G.709 standard, which can be extended as
+        needed in future.";
     }
   }
 
@@ -212,10 +528,27 @@ module openconfig-terminal-device {
         interleaved parity) errors";
     }
 
+    leaf errored-blocks {
+      type yang:counter64;
+      description
+        "The number of errored blocks. Error detection codes are
+        capable to detect whether one or more errors have occurred
+        in a given sequence of bits – the block. It is normally not
+        possible to determine the exact number of errored bits within
+        the block.";
+      reference "ITU-T Rec. G.826";
+    }
+
+    leaf fec-uncorrectable-blocks {
+      type yang:counter64;
+      description
+        "The number of blocks that were uncorrectable by the FEC";
+    }
+
     leaf fec-uncorrectable-words {
       type yang:counter64;
       description
-        "The number words that were uncorrectable by the FEC";
+        "The number of words that were uncorrectable by the FEC";
     }
 
     leaf fec-corrected-bytes {
@@ -521,9 +854,28 @@ module openconfig-terminal-device {
       units Gbps;
       description
         "Allocation of the logical client channel to the tributary
-        or sub-channel, expressed in Gbps";
+        or sub-channel, expressed in Gbps. Please note that if the
+        assignment is to an OTN logical channel, the allocation must
+        be an integer multiplication to tributary-slot-granularity
+        of the OTN logical channel.";
     }
 
+    leaf tributary-slot-index {
+      type int32;
+      description
+        "Indicates the first tributary slot index allocated to the
+        client signal or logical channel in the assignment. Valid
+        only when the assignment is to an OTN logical channel.";
+    }
+
+    leaf mapping {
+      type identityref {
+        base oc-opt-types:FRAME_MAPPING_PROTOCOL;
+      }
+      description
+        "Logical channel mapping procedure. Valid only when the
+        assignment is to an OTN logical channel.";
+    }
   }
 
   grouping terminal-logical-chan-assignment-state {
@@ -774,6 +1126,11 @@ module openconfig-terminal-device {
           description
             "Logical channel is operationally down";
         }
+        enum TESTING {
+          description
+            "Logical channel is under test as a result of
+            enabling test-signal";
+        }
       }
       description
         "Link-state of the Ethernet protocol on the logical channel,
@@ -825,14 +1182,14 @@ module openconfig-terminal-device {
         }
 
         uses terminal-otn-protocol-top {
-          when "config/logical-channel-type = 'PROT_OTN'" {
+          when "./config/logical-channel-type = 'PROT_OTN'" {
             description
               "Include the OTN protocol data only when the
               channel is using OTN framing.";
           }
         }
         uses terminal-ethernet-protocol-top {
-          when "config/logical-channel-type = 'PROT_ETHERNET'" {
+          when "./config/logical-channel-type = 'PROT_ETHERNET'" {
             description
               "Include the Ethernet protocol statistics only when the
               protocol used by the link is Ethernet.";
@@ -1073,7 +1430,6 @@ module openconfig-terminal-device {
     }
   }
 
-
   grouping terminal-device-config {
     description
       "Configuration data for transport terminal devices at a
@@ -1125,17 +1481,11 @@ module openconfig-terminal-device {
   // augment statements
 
   augment "/oc-platform:components/oc-platform:component" {
-    when "/oc-platform:components/oc-platform:component/" +
-      "oc-platform:state/oc-platform:type = 'OPTICAL_CHANNEL'" {
-      description
-        "Augment is active when component is of type
-        OPTICAL_CHANNEL";
-    }
     description
-      "Adding optical channel data to physical inventory";
+      "Adding optical channel data to physical inventory. This
+      augmentation is only valid when the type of the component
+      is OPTICAL_CHANNEL.";
 
-    uses terminal-optical-channel-top {
-    }
+    uses terminal-optical-channel-top;
   }
-
 }

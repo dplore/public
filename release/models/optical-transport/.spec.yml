@@ -25,7 +25,9 @@
     - yang/optical-transport/openconfig-transport-line-common.yang
     - yang/optical-transport/openconfig-wavelength-router.yang
     - yang/optical-transport/openconfig-channel-monitor.yang
+    - yang/optical-transport/openconfig-transport-line-connectivity.yang
   build:
+    - yang/optical-transport/openconfig-transport-line-connectivity.yang
     - yang/optical-transport/openconfig-wavelength-router.yang
   run-ci: true
 - name: openconfig-transport-line-protection
@@ -35,4 +37,14 @@
     - yang/platform/openconfig-platform.yang
   build:
     - yang/optical-transport/openconfig-transport-line-protection.yang
+  run-ci: true
+- name: openconfig-optical-attenuator
+  docs:
+    - yang/optical-transport/openconfig-optical-attenuator.yang
+  build:
+    - yang/optical-transport/openconfig-optical-attenuator.yang
+  run-ci: true
+- name: openconfig-channel-monitor
+  build:
+    - yang/optical-transport/openconfig-channel-monitor.yang
   run-ci: true

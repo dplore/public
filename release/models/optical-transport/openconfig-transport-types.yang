@@ -22,7 +22,50 @@ module openconfig-transport-types {
     "This module contains general type definitions and identities
     for optical transport models.";
 
-  oc-ext:openconfig-version "0.6.0";
+  oc-ext:openconfig-version "0.12.0";
+
+  revision "2020-08-12" {
+    description
+      "Additional tributary rates.";
+    reference "0.12.0";
+  }
+
+  revision "2020-04-24" {
+    description
+      "Add 400G protocol and additional tributary half rates.";
+    reference "0.11.0";
+  }
+
+  revision "2020-04-22" {
+    description
+      "Add AOC and DAC connector identities.";
+    reference "0.10.0";
+  }
+
+  revision "2019-06-27" {
+    description
+      "Add FIBER_JUMPER_TYPE identityref.";
+    reference "0.9.0";
+  }
+
+  revision "2019-06-21" {
+    description
+      "Generalize and rename optical port type identity";
+    reference "0.8.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.7.1";
+  }
+
+  revision "2018-10-23" {
+    description
+      "Added frame mapping protocols for logical channels assignments
+      and tributary slot granularity for OTN logical channels";
+    reference "0.7.0";
+  }
 
   revision "2018-05-16" {
     description
@@ -41,6 +84,11 @@ module openconfig-transport-types {
       "Fixes and additions for terminal optics model";
     reference "0.4.0";
   }
+
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
 
   // typedef statements
 
@@ -92,6 +140,70 @@ module openconfig-transport-types {
     default NONE;
     description
       "Loopback modes for transponder logical channels";
+  }
+
+  identity FRAME_MAPPING_PROTOCOL {
+    description
+      "Base identity for frame mapping protocols that can be used
+      when mapping Ethernet, OTN or other client signals to OTN
+      logical channels.";
+  }
+
+  identity AMP {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Asynchronous Mapping Procedure";
+  }
+
+  identity GMP {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Generic Mapping Procedure";
+  }
+
+  identity BMP {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Bit-synchronous Mapping Procedure";
+  }
+
+  identity CBR {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Constant Bit Rate Mapping Procedure";
+  }
+
+  identity GFP_T {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Transparent Generic Framing Protocol";
+  }
+
+  identity GFP_F {
+    base FRAME_MAPPING_PROTOCOL;
+    description "Framed-Mapped Generic Framing Protocol";
+  }
+
+  identity TRIBUTARY_SLOT_GRANULARITY {
+    description
+      "Base identity for tributary slot granularity for OTN
+      logical channels.";
+  }
+
+  identity TRIB_SLOT_1.25G {
+    base TRIBUTARY_SLOT_GRANULARITY;
+    description
+      "The tributary slot with a bandwidth of approximately 1.25 Gb/s
+      as defined in ITU-T G.709 standard.";
+  }
+
+  identity TRIB_SLOT_2.5G {
+    base TRIBUTARY_SLOT_GRANULARITY;
+    description
+      "The tributary slot with a bandwidth of approximately 2.5 Gb/s
+      as defined in ITU-T G.709 standard.";
+  }
+
+  identity TRIB_SLOT_5G {
+    base TRIBUTARY_SLOT_GRANULARITY;
+    description
+      "The tributary slot with a bandwidth of approximately 5 Gb/s
+      as defined in ITU-T G.709 standard.";
   }
 
   // grouping statements
@@ -434,6 +546,11 @@ module openconfig-transport-types {
     description "ODU 4 protocol";
   }
 
+  identity PROT_400GE {
+    base TRIBUTARY_PROTOCOL_TYPE;
+    description "400G Ethernet protocol";
+  }
+
   identity TRANSCEIVER_FORM_FACTOR_TYPE {
     description
       "Base identity for identifying the type of pluggable optic
@@ -559,6 +676,18 @@ module openconfig-transport-types {
     description
       "MPO (multi-fiber push-on/pull-off) type fiber connector
       1x12 fibers";
+  }
+
+  identity AOC_CONNECTOR {
+    base FIBER_CONNECTOR_TYPE;
+    description
+      "AOC (active optical cable) type fiber connector";
+  }
+
+  identity DAC_CONNECTOR {
+    base FIBER_CONNECTOR_TYPE;
+    description
+      "DAC (direct attach copper) type fiber connector";
   }
 
   identity ETHERNET_PMD_TYPE {
@@ -799,10 +928,160 @@ module openconfig-transport-types {
       "300G tributary signal rate";
   }
 
+  identity TRIB_RATE_350G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "350G tributary signal rate";
+  }
+
   identity TRIB_RATE_400G {
     base TRIBUTARY_RATE_CLASS_TYPE;
     description
       "400G tributary signal rate";
+  }
+
+  identity TRIB_RATE_450G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "450G tributary signal rate";
+  }
+
+  identity TRIB_RATE_500G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "500G tributary signal rate";
+  }
+
+  identity TRIB_RATE_550G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "550G tributary signal rate";
+  }
+
+  identity TRIB_RATE_600G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "600G tributary signal rate";
+  }
+
+  identity TRIB_RATE_650G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "650G tributary signal rate";
+  }
+
+  identity TRIB_RATE_700G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "700G tributary signal rate";
+  }
+
+  identity TRIB_RATE_750G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "750G tributary signal rate";
+  }
+
+  identity TRIB_RATE_800G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "800G tributary signal rate";
+  }
+
+  identity TRIB_RATE_850G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "850G tributary signal rate";
+  }
+
+  identity TRIB_RATE_900G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "900G tributary signal rate";
+  }
+
+  identity TRIB_RATE_950G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "950G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1000G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1000G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1050G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1050G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1100G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1100G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1150G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1150G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1200G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1200G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1250G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1250G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1300G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1300G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1350G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1350G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1400G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1400G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1450G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1450G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1500G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1500G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1550G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1550G tributary signal rate";
+  }
+
+  identity TRIB_RATE_1600G {
+    base TRIBUTARY_RATE_CLASS_TYPE;
+    description
+      "1600G tributary signal rate";
   }
 
   identity LOGICAL_ELEMENT_PROTOCOL_TYPE {
@@ -829,6 +1108,83 @@ module openconfig-transport-types {
       "Optical channels act as carriers for transport traffic
       directed over a line system.  They are represented as
       physical components in the physical inventory model.";
+  }
+
+  identity FIBER_JUMPER_TYPE {
+    description
+      "Types of fiber jumpers used for connecting device ports";
+  }
+
+  identity FIBER_JUMPER_SIMPLEX {
+    base FIBER_JUMPER_TYPE;
+    description
+      "Simplex fiber jumper";
+  }
+
+  identity FIBER_JUMPER_MULTI_FIBER_STRAND {
+    base FIBER_JUMPER_TYPE;
+    description
+      "One strand of a fiber jumper which contains multiple fibers
+      within it, such as an MPO based fiber jumper";
+  }
+
+  identity OPTICAL_PORT_TYPE {
+    description
+      "Type definition for optical transport port types";
+  }
+
+  identity INGRESS {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Ingress port, corresponding to a signal entering
+      a line system device such as an amplifier or wavelength
+      router.";
+  }
+
+  identity EGRESS {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Egress port, corresponding to a signal exiting
+      a line system device such as an amplifier or wavelength
+      router.";
+  }
+
+  identity ADD {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Add port, corresponding to a signal injected
+      at a wavelength router.";
+  }
+
+  identity DROP {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Drop port, corresponding to a signal dropped
+      at a wavelength router.";
+  }
+
+  identity MONITOR {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Monitor port, corresponding to a signal used by an optical
+      channel monitor. This is used to represent the connection
+      that a channel monitor port is connected to, typically on a
+      line system device. This  connection may be via physical cable
+      and faceplate ports or internal to the device";
+  }
+
+  identity TERMINAL_CLIENT {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Client-facing port on a terminal optics device (e.g.,
+      transponder or muxponder).";
+  }
+
+  identity TERMINAL_LINE {
+    base OPTICAL_PORT_TYPE;
+    description
+      "Line-facing port on a terminal optics device (e.g.,
+      transponder or muxponder).";
   }
 
 }

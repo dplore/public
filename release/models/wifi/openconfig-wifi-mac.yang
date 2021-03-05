@@ -3,9 +3,9 @@ module openconfig-wifi-mac {
   yang-version "1";
 
   // namespace
-  namespace "http://openconfig.net/yang/wifi/mac";
+  namespace "http://openconfig.net/yang/wifi-mac";
 
-  // Assign this module a prefix to be used by other modules, when imported.
+  // Assign this module a prefix.
   prefix "oc-wifi-mac";
 
   import openconfig-yang-types { prefix oc-yang; }
@@ -26,11 +26,31 @@ module openconfig-wifi-mac {
   description
     "Model for managing MAC layer configuration of Radio interfaces.";
 
-  oc-ext:openconfig-version "0.2.0";
+  oc-ext:openconfig-version "0.4.1";
+
+  revision "2020-03-24" {
+    description
+      "Update namespace based on new directory structure";
+    reference "0.4.1";
+  }
+
+  revision "2018-12-19" {
+    description
+      "Frequency-specific data-rates, fix client connection-time,
+      fix client ipv6 addresses, remove mobility-domain.";
+    reference "0.4.0";
+  }
+
+  revision "2018-07-16" {
+    description
+      "Reorginize bssid-counters and add BSSID references. Add
+      vlan-list.";
+    reference "0.3.0";
+  }
 
   revision "2017-12-21" {
     description
-      "Add mobility-domain and move/create bssid-state list for 
+      "Add mobility-domain and move/create bssid-state list for
       counters.";
     reference "0.2.0";
   }
@@ -65,11 +85,23 @@ module openconfig-wifi-mac {
         "Whether this SSID IE is hidden within Beacons.";
     }
 
-    leaf vlan-id {
+    leaf default-vlan {
       type oc-vlan-types:vlan-id;
       description
-        "Optional VLAN tag used by the SSID. When unspecified, defaults
-        to untagged.";
+        "Default VLAN tag used by the SSID. When unspecified, SSID
+        defaults to untagged. If DVA enabled and RADIUS returns a
+        VLAN not present in 'vlan-list', or RADIUS returns no VLAN
+        (Tunnel-Private-Group-Id), this VLAN will be used. If DVA
+        not enabled, all packets are tagged with this VLAN.";
+    }
+
+    leaf-list vlan-list {
+      type oc-vlan-types:vlan-id;
+      description
+        "List of VLANs allowed on the SSID, if DVA is enabled. Note,
+        if DVA enabled and RADIUS returns no VLAN or a VLAN outside
+        of this list, the SSID will be tagged with the value of
+        vlan-id (or untagged if 'vlan-id' not configured).";
     }
 
     leaf operating-frequency {
@@ -78,24 +110,40 @@ module openconfig-wifi-mac {
       }
       default "oc-wifi-types:FREQ_2_5_GHZ";
       description
-        "Operating frequency of this SSID. When none specified, the default is
-        dual-band.";
+        "Operating frequency of this SSID. When none specified, the
+        default is dual-band.";
     }
 
-    leaf-list basic-data-rates {
+    leaf-list basic-data-rates-2g {
       type identityref {
         base oc-wifi-types:DATA_RATE;
       }
       description
-        "Basic data-rates for the SSID.";
+        "2.4GHz Basic data-rates for the SSID.";
     }
 
-    leaf-list supported-data-rates {
+    leaf-list supported-data-rates-2g {
       type identityref {
         base oc-wifi-types:DATA_RATE;
       }
       description
-        "Supported data-rates for the SSID.";
+        "2.4GHz Supported data-rates for the SSID.";
+    }
+
+    leaf-list basic-data-rates-5g {
+      type identityref {
+        base oc-wifi-types:DATA_RATE;
+      }
+      description
+        "5GHz Basic data-rates for the SSID.";
+    }
+
+    leaf-list supported-data-rates-5g {
+      type identityref {
+        base oc-wifi-types:DATA_RATE;
+      }
+      description
+        "5GHz Supported data-rates for the SSID.";
     }
     // MCS rates explicitly absent, as they are typically not pruned.
 
@@ -159,8 +207,8 @@ module openconfig-wifi-mac {
       description
         "The type of Layer2 authentication in use.";
     }
-    // Note, legacy 802.11 auth methods (ie Shared Key) explicitly absent here.
-    // It should never be used.
+    // Note, legacy 802.11 auth methods (ie Shared Key) explicitly
+    // absent here. It should never be used.
 
     leaf wpa2-psk {
       when "../opmode = 'WPA2_PERSONAL'";
@@ -172,7 +220,8 @@ module openconfig-wifi-mac {
      }
 
     leaf server-group {
-      when "../opmode = 'WPA2_ENTERPRISE' or ../opmode = 'WPA2_PERSONAL'";
+      when "../opmode = 'WPA2_ENTERPRISE' or ../opmode =
+      'WPA2_PERSONAL'";
       type string;
         description
           "Specifies the RADIUS server-group to be used,
@@ -186,13 +235,6 @@ module openconfig-wifi-mac {
       description
         "Enable/disable Dynamic VLAN Assignment,
         using 'Tunnel-Private-Group-Id' RADIUS attribute.";
-    }
-
-    leaf mobility-domain {
-      type string;
-      description
-        "Specify the mobility domain where PMK-R0 distribution will occur.
-        Specifically, which APs will recieve PMK-R0 if using 802.11r (FT)."; 
     }
 
     leaf dhcp-required {
@@ -225,7 +267,7 @@ module openconfig-wifi-mac {
       type uint16;
       units seconds;
       description
-        "Time, in seconds, for the Pairwise Transient Key to be timed out.";
+        "Time, in seconds, for the Pairwise Transient Key.";
     }
 
     leaf gtk-timeout {
@@ -291,7 +333,9 @@ module openconfig-wifi-mac {
     leaf dot11r-domainid {
       type uint16;
       description
-        "Mobility Domain ID.";
+        "Specify the mobility domain id (MDID) where PMK-R0
+        distribution will occur. Specifically, which APs will recieve
+        PMK-R0 if using 802.11r (FT).";
     }
 
     leaf dot11r-method {
@@ -316,8 +360,6 @@ module openconfig-wifi-mac {
       description
         "TTL for the Pairwise Master Key R1.";
     }
-    // At present R1 Key distribution is left up to vendor. All APs in mgmnt
-    // subnet, all APs on WLC etc.
   }
 
   grouping dot1x-timers-config {
@@ -357,8 +399,8 @@ module openconfig-wifi-mac {
       type uint8;
       max-elements 8;
       description
-        "Allowed DSCP markings for WMM AC_VO. Remark to lowest in this list
-        if DSCP marking falls outside of these allowed markings.
+        "Allowed DSCP markings for WMM AC_VO. Remark to lowest in this
+        list if DSCP marking falls outside of these allowed markings.
 
         From 1 (min) to 8 (max) integers.";
     }
@@ -367,8 +409,8 @@ module openconfig-wifi-mac {
       type uint8;
       max-elements 8;
       description
-        "Allowed DSCP markings for WMM AC_VI. Remark to lowest in this list
-        if DSCP marking falls outside of these allowed markings.
+        "Allowed DSCP markings for WMM AC_VI. Remark to lowest in this
+        list if DSCP marking falls outside of these allowed markings.
 
         From 1 (min) to 8 (max) integers.";
     }
@@ -377,8 +419,8 @@ module openconfig-wifi-mac {
       type uint8;
       max-elements 8;
       description
-        "Allowed DSCP markings for WMM AC_BE. Remark to lowest in this list
-        if DSCP marking falls outside of these allowed markings.
+        "Allowed DSCP markings for WMM AC_BE. Remark to lowest in this
+        list if DSCP marking falls outside of these allowed markings.
 
         From 1 (min) to 8 (max) integers.";
     }
@@ -387,8 +429,8 @@ module openconfig-wifi-mac {
       type uint8;
       max-elements 8;
       description
-        "Allowed DSCP markings for WMM AC_BK. Remark to lowest in this list
-        if DSCP marking falls outside of these allowed markings.
+        "Allowed DSCP markings for WMM AC_BK. Remark to lowest in this
+        list if DSCP marking falls outside of these allowed markings.
 
         From 1 (min) to 8 (max) integers.";
     }
@@ -413,35 +455,48 @@ module openconfig-wifi-mac {
     }
   }
 
-  grouping ssid-common-state {
+  grouping bssid-common-state {
     description
-      "Grouping for defining ssid-specific operational state";
+      "Grouping for defining bssid-specific operational state";
 
-    leaf bssid {
-      type oc-yang:mac-address;
+    container bssids {
       description
-        "Represents the BSSID. Typically this is base-radio mac +/- in last
-        octet; though not strictly required.";
-    }
+        "Top-level container for BSSIDs operational state data.";
+      list bssid {
+        key "radio-id bssid";
+        config false;
+        description
+          "List of BSSIDs and what radio-id they utilize. Radio-id
+          included here to allocate for APs with dual 5GHz radios.
+          Usage of paths allows for discovery and subscription of
+          State data per BSSID, regardless of radio.";
 
-    leaf bss-channel-utilization {
-     type oc-types:percentage;
-     description
-       "Total 802.11 channel utilization on this BSS. The total channel
-       utilization should include all time periods the AP spent actively
-       receiving and transmitting 802.11 frames on this BSS.";
-    }
+        leaf bssid {
+          type leafref {
+            path "../state/bssid";
+          }
+          config false;
+          description
+            "The BSSID MAC address.";
+        }
 
-    leaf rx-bss-dot11-channel-utilization {
-      type oc-types:percentage;
-      description
-        "Rx channel utilization percent for this BSS.";
-    }
+        leaf radio-id {
+          type leafref {
+            path "../state/radio-id";
+          }
+          description
+            "References the configured id of the radio";
+        }
 
-    leaf tx-bss-dot11-channel-utilization {
-      type oc-types:percentage;
-      description
-        "Tx channel utilization percent for this BSS.";
+        container state {
+          config false;
+          description
+            "BSSID state data.";
+
+          uses bss-common-state;
+          uses bssid-counters-state;
+        }
+      }
     }
   }
 
@@ -449,12 +504,16 @@ module openconfig-wifi-mac {
     description
       "Grouping for defining bss-specific operational state.";
 
-    leaf ess {
-      type leafref {
-        path "../../../../ssids/ssid/name";
-      }
+    leaf bssid {
+      type oc-yang:mac-address;
       description
-        "Name of the ESS this BSS is utilizing.";
+        "MAC of the BSS.";
+    }
+
+    leaf radio-id {
+      type uint8;
+      description
+        "The configured id of the radio";
     }
 
     leaf num-associated-clients {
@@ -468,18 +527,19 @@ module openconfig-wifi-mac {
     description
       "BSSID telemetry statistics.";
 
-    leaf bssid {
-      type oc-yang:mac-address;
-      description
-        "MAC of the BSS.";
-    }
-
     container counters {
       config false;
       description
         "BSS Counters.";
 
       // Rx Counters
+      leaf rx-bss-dot11-channel-utilization {
+        type oc-types:percentage;
+        description
+          "Recieve channel utilization percent caused by reception of
+          any 802.11 frame within this BSS.";
+      }
+
       leaf rx-mgmt {
         type oc-yang:counter64;
         description
@@ -494,11 +554,12 @@ module openconfig-wifi-mac {
 
       container rx-data-dist {
         description
-          "The distribution of Data frame sizes in bytes of successfully
-          recieved AMPDU, or MPDU for non-aggregated, frames.
-          The distribution should characterize frame sizes starting at 64 bytes
-          or less with the bin size doubling for each successive bin to a
-          maximum of 1MB or larger, as represented in the following table:
+          "The distribution of Data frame sizes in bytes of
+          successfully recieved AMPDU, or MPDU for non-aggregated,
+          frames. The distribution should characterize frame sizes
+          starting at 64 bytes or less with the bin size doubling for
+          each successive bin to a maximum of 1MB or larger, as
+          represented in the following table:
 
           Lower Bound Upper Bound
              0          64
@@ -639,11 +700,12 @@ module openconfig-wifi-mac {
 
       container rx-mcs {
        description
-         "Received Data frames, per MCS Index. It is expected that vendors
-          bucketize 802.11n MCS frames in their matching 802.11ac buckets.
+         "Received Data frames, per MCS Index. It is expected that
+         vendors bucketize 802.11n MCS frames in their matching
+         802.11ac buckets.
 
-          Example, 802.11n MCS 15 = 802.11ac MCS 7.
-          802.11n MCS 20 = 802.11ac MCS 4.";
+         Example, 802.11n MCS 15 = 802.11ac MCS 7.
+         802.11n MCS 20 = 802.11ac MCS 4.";
 
         leaf mcs0 {
           type oc-yang:counter64;
@@ -709,8 +771,8 @@ module openconfig-wifi-mac {
       leaf rx-retries {
         type oc-yang:counter64;
         description
-          "Total number of received frames with the Retry bit set, within this
-          BSS.";
+          "Total number of received frames with the Retry bit set,
+          within this BSS.";
       }
 
       leaf rx-retries-data {
@@ -721,8 +783,8 @@ module openconfig-wifi-mac {
       leaf rx-retries-subframe {
         type oc-yang:counter64;
         description
-          "Aggregated MPDUs which had individual subframes that fail and require
-          retransmission.";
+          "Aggregated MPDUs which had individual subframes that fail
+          and require retransmission.";
       }
 
       leaf rx-bytes-data {
@@ -732,6 +794,13 @@ module openconfig-wifi-mac {
       }
 
       // Tx Counters
+      leaf tx-bss-dot11-channel-utilization {
+        type oc-types:percentage;
+        description
+          "Channel utilization percent caused by transmission of any
+          802.11 frame within this BSS.";
+      }
+
       leaf tx-mgmt {
         type oc-yang:counter64;
         description
@@ -746,11 +815,12 @@ module openconfig-wifi-mac {
 
       container tx-data-dist {
         description
-          "The distribution of Data frame sizes in bytes of successfully transmitted
-          AMPDU, or MPDU for non-aggregated, frames.
-          The distribution should characterize frame sizes starting at 64 bytes
-          or less with the bin size doubling for each successive bin to a
-          maximum of 1MB or larger, as represented in the following table:
+          "The distribution of Data frame sizes in bytes of
+          successfully transmitted AMPDU, or MPDU for non-aggregated,
+          frames. The distribution should characterize frame sizes
+          starting at 64 bytes or less with the bin size doubling for
+          each successive bin to a maximum of 1MB or larger, as
+          represented in the following table:
 
           Lower Bound Upper Bound
              0          64
@@ -890,8 +960,9 @@ module openconfig-wifi-mac {
 
       container tx-mcs {
         description
-          "Transmitted Data frames, per MCS Index. It is expected that vendors
-          bucketize 802.11n MCS frames in their matching 802.11ac buckets.
+          "Transmitted Data frames, per MCS Index. It is expected that
+          vendors bucketize 802.11n MCS frames in their matching
+          802.11ac buckets.
 
           Example, 802.11n MCS 15 = 802.11ac MCS 7.
           802.11n MCS 20 = 802.11ac MCS 4.";
@@ -966,20 +1037,30 @@ module openconfig-wifi-mac {
       leaf tx-retries-data {
         type oc-yang:counter64;
         description
-          "Number of transmitted QoS Data frames with the Retry bit set";
+          "Number of transmitted QoS Data frames with the Retry bit
+          set";
       }
 
       leaf tx-retries-subframe {
         type oc-yang:counter64;
         description
-          "Aggregated MPDUs which had individual subframes that fail and require
-          retransmission.";
+          "Aggregated MPDUs which had individual subframes that fail
+          and require retransmission.";
       }
 
       leaf tx-bytes-data {
         type oc-yang:counter64;
         description
           "Bytes transmitted from QoS Data frames";
+      }
+      // Total Counters
+      leaf bss-channel-utilization {
+       type oc-types:percentage;
+       description
+         "Total 802.11 channel utilization in this BSS. The total
+         channel utilization should include all time periods the AP
+         spent actively receiving and transmitting 802.11 frames in
+         this BSS.";
       }
     }
   }
@@ -1041,10 +1122,12 @@ module openconfig-wifi-mac {
       }
 
       leaf connection-time {
-        type uint16;
-        units seconds;
+        type oc-types:timeticks64;
+        units nanoseconds;
         description
-          "Time, in seconds, since Client Association.";
+          "Reports the time of Client Association. The value is the
+          timestamp in nanoseconds relative to the Unix Epoch
+          (Jan 1, 1970 00:00:00 UTC).";
       }
 
       leaf username {
@@ -1061,16 +1144,16 @@ module openconfig-wifi-mac {
           or otherwise.";
       }
 
-      leaf ipv4-address {
+      leaf-list ipv4-address {
         type oc-inet:ipv4-address;
         description
-          "IPv4 address of the client.";
+          "IPv4 addresses of the client.";
       }
 
-      leaf ipv6-address {
+      leaf-list ipv6-addresses {
         type oc-inet:ipv6-address;
         description
-          "IPv6 address of the client.";
+          "IPv6 addresses of the client.";
       }
 
       leaf operating-system {
@@ -1087,8 +1170,8 @@ module openconfig-wifi-mac {
       See Sec. 5.2.7.1 of 802.11k-2008 Standard.";
     container state {
       description
-        "Container for Client beacon reports. Requires 802.11k enabled.
-        See Sec. 5.2.7.1 of 802.11k-2008 Standard.";
+        "Container for Client beacon reports. Requires 802.11k
+        enabled. See Sec. 5.2.7.1 of 802.11k-2008 Standard.";
 
       leaf neighbor-bssid {
         type oc-yang:mac-address;
@@ -1105,7 +1188,8 @@ module openconfig-wifi-mac {
       leaf neighbor-rssi {
         type int8;
         description
-          "The RSSI of this neighbor in dBm, expressed as a negative number.";
+          "The RSSI of this neighbor in dBm, expressed as a negative
+          number.";
       }
 
       leaf neighbor-antenna {
@@ -1118,7 +1202,8 @@ module openconfig-wifi-mac {
         type uint8;
         description
           "Channel load, as reported by Client to AP
-          normalized to 255. See Sec. 10.11.9.3 of 802.11ac-2013 Spec.";
+          normalized to 255. See Sec. 10.11.9.3 of 802.11ac-2013
+          Spec.";
       }
     }
   }
@@ -1129,8 +1214,8 @@ module openconfig-wifi-mac {
       Probe Req. frames. Capability is supported, if present.";
     container state {
       description
-        "Container for Client capabilities, as reported by Assoc. Req. or
-        Probe Req. frames. Capability is supported, if present.";
+        "Container for Client capabilities, as reported by Assoc. Req.
+        or Probe Req. frames. Capability is supported, if present.";
       leaf-list client-capabilities {
         type identityref {
           base oc-wifi-types:CLIENT_CAPABILITIES;
@@ -1158,7 +1243,8 @@ module openconfig-wifi-mac {
       leaf rssi {
         type int8;
         description
-          "The RSSI of this client in dBm. Expressed as negative number";
+          "The RSSI of this client in dBm. Expressed as negative
+          number";
       }
 
       leaf snr {
@@ -1209,7 +1295,8 @@ module openconfig-wifi-mac {
       leaf frequency {
         type uint8;
         description
-          "Frequency the client is utilizing. Typically, 2.4 or 5[GHz].";
+          "Frequency the client is utilizing. Typically, 2.4 or
+          5[GHz].";
       }
     }
   }
@@ -1270,7 +1357,8 @@ module openconfig-wifi-mac {
         container client-connection {
           config false;
           description
-            "Connection-state and meta-data associated with the Client.";
+            "Connection-state and meta-data associated with the
+            Client.";
 
           uses client-connect-state;
         }
@@ -1398,42 +1486,10 @@ module openconfig-wifi-mac {
     }
   }
 
-  grouping bssid-counters-top {
-    description
-      "Top-level grouping for BSSID operational state data.";
-
-    container bssids {
-      description
-        "Top-level container for BSSID operational state data.";
-      list bssid {
-        key "bssid";
-        config false;
-        description
-          "List of BSSIDs.";
-        leaf bssid {
-          type leafref {
-            path "../state/bssid";
-          }
-          config false;
-          description
-            "The BSSID MAC address.";
-        }
-
-        container state {
-          config false;
-          description
-            "BSSID state data.";
-
-          uses bss-common-state;
-          uses bssid-counters-state;
-        }
-      }
-    }
-  }
-
   grouping ssid-top {
     description
-      "Top-level grouping for ssid configuration and operational state data.";
+      "Top-level grouping for ssid configuration and operational state
+      data.";
 
     container ssids {
       description
@@ -1466,8 +1522,8 @@ module openconfig-wifi-mac {
             "Operational state data at the ssid level";
 
           uses ssid-common-config;
-          uses ssid-common-state;
         }
+        uses bssid-common-state;
         uses wmm-top;
         uses dot11r-top;
         uses dot11v-top;
@@ -1478,5 +1534,4 @@ module openconfig-wifi-mac {
     }
   }
   uses ssid-top;
-  uses bssid-counters-top;
 }

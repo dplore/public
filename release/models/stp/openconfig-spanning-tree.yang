@@ -26,7 +26,26 @@ module openconfig-spanning-tree {
     "This module defines configuration and operational state data
     for the spanning tree protocol.";
 
-  oc-ext:openconfig-version "0.2.0";
+  oc-ext:openconfig-version "0.3.1";
+
+  revision "2019-11-28" {
+    description
+      "Correct revision statement date for v0.3.0";
+    reference "0.3.1";
+  }
+
+  revision "2019-07-10" {
+    description
+      "Remove the time-since-last-topology-change leaf and
+      replace it with a timestamp of last topology change.";
+    reference "0.3.0";
+  }
+
+  revision "2018-11-21" {
+    description
+      "Add OpenConfig module metadata extensions.";
+    reference "0.2.1";
+  }
 
   revision "2017-07-14" {
     description
@@ -41,6 +60,10 @@ module openconfig-spanning-tree {
     reference "0.1.0";
   }
 
+  // OpenConfig specific extensions for module metadata.
+  oc-ext:regexp-posix;
+  oc-ext:catalog-organization "openconfig";
+  oc-ext:origin "openconfig";
 
   // identity statements
 
@@ -318,17 +341,13 @@ module openconfig-spanning-tree {
         "RFC4188 BRIDGE-MIB dot1dStpTopChanges";
     }
 
-    leaf time-since-topology-change {
+    leaf last-topology-change {
       type oc-types:timeticks64;
       description
-        "The time (in hundredths of a second) since the
-        last time a topology change was detected by the
-        bridge entity
-
-        The value is the timestamp in seconds relative to
-        the Unix Epoch (Jan 1, 1970 00:00:00 UTC).";
-      reference
-        "RFC4188 BRIDGE-MIB dot1dStpTimeSinceTopologyChange";
+        "The time at which the last topology change was
+        detected by the bridge entity. The value is
+        expressed relative to the Unix Epoch (Jan 1, 1970
+        00:00:00 UTC).";
     }
   }
 

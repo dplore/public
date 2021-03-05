@@ -3,7 +3,7 @@
 
 **Contributors:** Anees Shaikh, Rob Shakir, Kristian Larsson<br>
 **October 26, 2015**<br>
-*Updated: June 10, 2016*
+*Updated: June 2, 2019*
 
 
 ## Background
@@ -127,6 +127,15 @@ oc-ext:openconfig-version "0.4.0";
   }
 ```
 
+Individual YANG modules are versioned independently -- the
+semantic version is generally incremented only when there is a
+change in the corresponding file.  Submodules, however, must have
+the same semantic version as their parent modules.  Further details on
+versioning rules are available in the definition of the
+`openconfig-version` extension in the `openconfig-extensions.yang`
+module.
+
+
 ## YANG style conventions
 Style conventions describe guidelines related to conventions used in writing
 YANG modules.
@@ -198,7 +207,9 @@ below.
 
 `enum` values within an enumeration type should be UPPER_CASE_WITH_UNDERSCORES,
 keeping with conventions used for enumerated types in many programming
-languages.
+languages. They MUST begin with an alphanumeric character (A-Z or 0-9),
+optionally followed by a "_" or "." or additional alphanumeric characters
+(A-Z or 0-9).
 
 Example:
 ```
@@ -265,12 +276,18 @@ list servers {
 }
 ```
 
-YANG requires leaf nodes that are list keys to be direct descendents of the `list`
-statement.  Since key leaf nodes must also be members of the list data, they will
-generally reside in a `config` or `state` container (see
-[Modeling operational state](#modeling-operational-state)).  Hence, the list key leaf
-nodes should be of type `leafref` with a `path` pointing to the corresponding "actual"
-leaf in the config or state container.
+YANG requires leaf nodes that are list keys to be direct descendants of the
+`list` statement.  Since key leaf nodes must also be members of the list data,
+they will generally reside in a `config` or `state` container (see [Modeling
+operational state](#modeling-operational-state)).  Hence, the list key leaf
+nodes should be of type `leafref` with a `path` pointing to the corresponding
+"actual" leaf in the config or state container.
+
+List keys must reference a direct child of the `config` or `state` container -
+rather than referencing descendends in the `state` container (structure is not
+allowed within the `config` container by other rules). That is to say a key
+`leafref` may have a path of `../state/foo` but is not allowed to have a path
+`../state/counters/foo`.
 
 ```
 grouping interfaces-config {
@@ -292,7 +309,7 @@ grouping interfaces-list-top
 
     container config {
 
-      uses interface-config;
+      uses interfaces-config;
     }
 
     ...
@@ -311,6 +328,12 @@ container interfaces {
   }
 }
 ```
+
+Lists without keys must not be used unless the `openconfig-extensions`
+`atomic` extension is set for the list's surrounding container. Some transport
+protocols (e.g., gNMI) do not have a mechanism to refer to individual elements
+within a list with no key, and this ensures that telemetry updates for such
+lists include all elements, rather than partial updates being sent. 
 
 ### `presence`
 
@@ -538,4 +561,3 @@ module openconfig- {
 
 }
 ```
-
